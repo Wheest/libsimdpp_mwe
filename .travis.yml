@@ -11,11 +11,18 @@ matrix:
       dist: trusty
       sudo: true
       compiler: gcc
+      addons:
+       apt:
+         packages: &precise_latest_boost_packages
+           - gcc-8
+           - g++-8
 
 script:
     ############################################################################
     # Build main and tests
     ############################################################################
+     - export CC=gcc-8
+     - export CXX=g++-8
      - git submodule update --init --recursive
      - mkdir -p _build
      - cd _build

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Wheest/libsimdpp_mwe.svg?branch=master)](https://travis-ci.org/Wheest/libsimdpp_mwe)
+
 # SIMD MWE
 
 A minimum working example using the [libsimdpp](https://github.com/p12tic/libsimdpp) SIMD library, and the [CMake build system](https://cmake.org/).

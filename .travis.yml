@@ -1,0 +1,24 @@
+language: cpp
+
+env:
+  global:
+    # Ubuntu version
+    - LINUX_DIST=trusty
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: true
+      compiler: gcc
+
+script:
+    ############################################################################
+    # Build main and tests
+    ############################################################################
+     - git submodule update --init --recursive
+     - mkdir -p _build
+     - cd _build
+     - cmake ..
+     - make
+     - ./simd_mwe

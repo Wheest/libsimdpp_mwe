@@ -1,0 +1,3 @@
+[submodule "3rdparty/libsimdpp"]
+	path = 3rdparty/libsimdpp
+	url = https://github.com/p12tic/libsimdpp

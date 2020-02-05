@@ -22,49 +22,67 @@ void test_result(float* result, size_t size)
         assert(result[i] == size - 1);
 }
 
+void non_simd(float* vec_a, float* vec_b, float* result, size_t SIZE,
+              uint runs)
+{
+    for (int j = 0; j < runs; j++)
+    {
+#pragma loop(no_vector)
+	for (auto i = 0; i < SIZE; i++)
+	    result[i] = vec_a[i]  + vec_b[i];
+    }
+}
+
+void simd_version(float* vec_a, float* vec_b, float* result, size_t SIZE,
+                  uint runs)
+{
+    for (int j = 0; j < runs; j++)
+    {
+        for (int i=0; i<SIZE; i+=8) {
+            simdpp::float32<8> xmmA = simdpp::load(vec_a + i);  //loads 8 floats into xmmA
+            simdpp::float32<8> xmmB = simdpp::load(vec_b + i);  //loads 8 floats into xmmB
+            simdpp::float32<8> xmmC = simdpp::add(xmmA, xmmB);  //Vector add of xmmA and xmmB
+            simdpp::store(result + i, xmmC);            //Store result into the vector
+        }
+    }
+
+}
 
 int main(int argc, char *argv[])
 {
-    std::cout << "awright, world?" << std::endl;
+    if (argc != 3)
+    {
+        std::cout << "provide SIZE and runs" << std::endl;
+        exit(1);
+    }
 
-    const unsigned long SIZE = 4 * 160000;
+    const size_t SIZE = std::stoi(argv[1]);
+    const uint runs = std::stoi(argv[2]);
 
     float vec_a[SIZE];
     float vec_b[SIZE];
-    float result[SIZE];
+    float result1[SIZE];
+    float result2[SIZE];
 
     // standard version
     init_vector(vec_a, vec_b, SIZE);
     auto t1 = std::chrono::high_resolution_clock::now();
-
-    for (auto i = 0; i < SIZE; i++) {
-        result[i] = vec_a[i]  + vec_b[i];
-    }
-
+    non_simd(vec_a, vec_b, result1, SIZE, runs);
     auto t2 = std::chrono::high_resolution_clock::now();
     auto total = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
 
-    test_result(result, SIZE);
+    test_result(result1, SIZE);
     std::cout << "Standard: " << total << " ms\n";
 
 
     // SIMD version
     init_vector(vec_a, vec_b, SIZE);
-
-    t1 = std::chrono::high_resolution_clock::now();
-
-    for (int i=0; i<SIZE; i+=4) {
-	simdpp::float32<4> xmmA = simdpp::load(vec_a + i);  //loads 4 floats into xmmA
-	simdpp::float32<4> xmmB = simdpp::load(vec_b + i);  //loads 4 floats into xmmB
-	simdpp::float32<4> xmmC = simdpp::add(xmmA, xmmB);  //Vector add of xmmA and xmmB
-	simdpp::store(result + i, xmmC);            //Store result into the vector
-    }
-
-    t2 = std::chrono::high_resolution_clock::now();
-    total = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-
-    test_result(result, SIZE);
-    std::cout << "SIMD: " << total << " ms\n";
+    auto t3 = std::chrono::high_resolution_clock::now();
+    simd_version(vec_a, vec_b, result2, SIZE, runs);
+    auto t4 = std::chrono::high_resolution_clock::now();
+    auto total2 = std::chrono::duration_cast<std::chrono::milliseconds>(t4-t3).count();
+    test_result(result2, SIZE);
+    std::cout << "SIMD: " << total2 << " ms\n";
 
     return 0;
 }

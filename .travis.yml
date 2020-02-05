@@ -30,4 +30,4 @@ script:
      - cd _build
      - cmake ..
      - make
-     - ./simd_mwe
+     - ./simd_mwe 8192 100

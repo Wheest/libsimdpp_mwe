@@ -14,8 +14,8 @@ matrix:
       addons:
        apt:
          packages: &precise_latest_boost_packages
-           - gcc-8
-           - g++-8
+           - clang-8
+           - clang++-8
          sources: &precise_latest_boost_sources
            - ubuntu-toolchain-r-test
 
@@ -23,11 +23,11 @@ script:
     ############################################################################
     # Build main and tests
     ############################################################################
-     - export CC=gcc-8
-     - export CXX=g++-8
+     - export CC=clang-8
+     - export CXX=clang-8
      - git submodule update --init --recursive
      - mkdir -p _build
      - cd _build
      - cmake ..
      - make
-     - ./simd_mwe 8192 100
+     - ./simd_mwe 524288 100

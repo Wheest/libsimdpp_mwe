@@ -25,11 +25,10 @@ void test_result(float* result, size_t size)
 }
 
 void non_simd(float* vec_a, float* vec_b, float* result, size_t SIZE,
-              uint runs)
-{
+              uint runs){
     for (int j = 0; j < runs; j++)
     {
-#pragma loop(no_vector)
+#pragma clang loop vectorize(disable) interleave(disable)
 	for (auto i = 0; i < SIZE; i++)
 	    result[i] = vec_a[i] + vec_b[i];
     }
@@ -92,19 +91,33 @@ void simd_intrin_version(float* vec_a, float* vec_b, float* result,
     }
 }
 
-void simd_intrin_version_16(float* vec_a, float* vec_b, float* result,
-                            size_t SIZE, uint runs)
+void simd_intrin_version_8(float* vec_a, float* vec_b, float* result,
+                           size_t SIZE, uint runs)
 {
     for (int j = 0; j < runs; j++)
     {
-        for (int i=0; i<SIZE; i+=4) {
-            __m512 xmmA = _mm512_load_ps(vec_a + i);
-            __m512 xmmB = _mm512_load_ps(vec_b + i);
-            __m512 xmmC = _mm512_add_ps(xmmA, xmmB);
-            _mm512_store_ps(result + i, xmmC);
+        for (int i=0; i<SIZE; i+=8) {
+            __m256 xmmA = _mm256_load_ps(vec_a + i);
+            __m256 xmmB = _mm256_load_ps(vec_b + i);
+            __m256 xmmC = _mm256_add_ps(xmmA, xmmB);
+            _mm256_store_ps(result + i, xmmC);
         }
     }
 }
+
+// void simd_intrin_version_16(float* vec_a, float* vec_b, float* result,
+//                             size_t SIZE, uint runs)
+// {
+//     for (int j = 0; j < runs; j++)
+//     {
+//         for (int i=0; i<SIZE; i+=16) {
+//             __m512 xmmA = _mm512_load_ps(vec_a + i);
+//             __m512 xmmB = _mm512_load_ps(vec_b + i);
+//             __m512 xmmC = _mm512_add_ps(xmmA, xmmB);
+//             _mm512_store_ps(result + i, xmmC);
+//         }
+//     }
+// }
 
 int main(int argc, char *argv[])
 {
@@ -175,11 +188,20 @@ int main(int argc, char *argv[])
     // SIMD Intrinsics version
     init_vector(vec_a, vec_b, SIZE);
     t1 = std::chrono::high_resolution_clock::now();
-    simd_intrin_version_16(vec_a, vec_b, result, SIZE, runs);
+    simd_intrin_version_8(vec_a, vec_b, result, SIZE, runs);
     t2 = std::chrono::high_resolution_clock::now();
     total = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     test_result(result, SIZE);
-    std::cout << "SSE Intrinsics (16): " << total << " ms\n";
+    std::cout << "SSE Intrinsics (8): " << total << " ms\n";
+
+    // SIMD Intrinsics version
+    // init_vector(vec_a, vec_b, SIZE);
+    // t1 = std::chrono::high_resolution_clock::now();
+    // simd_intrin_version_16(vec_a, vec_b, result, SIZE, runs);
+    // t2 = std::chrono::high_resolution_clock::now();
+    // total = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    // test_result(result, SIZE);
+    // std::cout << "SSE Intrinsics (16): " << total << " ms\n";
 
     return 0;
 }
